@@ -4,7 +4,8 @@ Reusable Ansible and script patterns.
 
 ## Contents
 
-- See [docs/reusable-patterns-ansible-scripts.md](docs/reusable-patterns-ansible-scripts.md) for the full reference (when added).
+- **[docs/reusable-patterns-ansible-scripts.md](docs/reusable-patterns-ansible-scripts.md)** — Reusable Ansible and script patterns (with references & research).
+- **[docs/RESEARCH.md](docs/RESEARCH.md)** — Official docs and general research (Ansible, shell style, ShellCheck).
 
 ## Quick links
 

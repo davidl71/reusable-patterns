@@ -151,7 +151,7 @@ pipelining = True
   # or
   cd "$(dirname "$0")"
   # or from scripts/:
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_S0}")" && pwd)"
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
   ```
 
@@ -182,6 +182,30 @@ pipelining = True
 | `roles/common`    | OS vars + base packages + optional (e.g. gh, git config); duplicate and rename role if project-specific. |
 | `scripts/include/` | Copy `set_parallel_level.sh`, `ensure_third_party.sh`-style guard and sourcing pattern. |
 | `run-dev-setup.sh` | Same flow (SSL on macOS, galaxy, syntax-check, list-tasks, run playbook); adjust playbook/inventory names. |
+
+---
+
+## References & research
+
+### Ansible (official)
+
+- **[General tips — Ansible Community Documentation](https://docs.ansible.com/ansible/latest/user_guide/playbooks_best_practices.html)**  
+  Keep it simple; use version control; avoid configuration-dependent content; use `playbook_dir`/`role_name` for paths. **Playbooks:** name plays/tasks/blocks, set `state` explicitly, use comments, use **fully qualified collection names (FQCN)** e.g. `ansible.builtin.copy`. **Inventory:** group by function; separate production and staging; use dynamic inventory for clouds; vault strategy (vars + vault file). **Execution:** try in staging first; use `--syntax-check`; handle OS/distro differences via **group vars** and **`group_by`** or **`include_vars`** for OS-specific variables (e.g. `include_vars: "os_{{ ansible_facts['distribution'] }}.yml"`).
+
+- **[Roles — Ansible Community Documentation](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html)**  
+  Standard role layout: `tasks/`, `handlers/`, `templates/`, `files/`, `vars/`, `defaults/`, `meta/`. `defaults/main.yml` = low precedence; `vars/main.yml` = high precedence. **OS-specific tasks:** use `import_tasks: redhat.yml` / `debian.yml` with `when: ansible_facts['os_family']|lower == 'redhat'` (or use `include_vars` for vars-only). Tags on roles apply to all tasks in the role; use `--tags` for selective runs. Role dependencies in `meta/main.yml` run before the role.
+
+- **Porting / versions:** [ansible-core 2.19/Ansible 12 templating changes](https://docs.ansible.com/ansible/latest/user_guide/playbooks_best_practices.html) and [porting guides](https://docs.ansible.com/ansible/latest/porting_guides/porting_guides.html) — validate playbooks when upgrading; prefer `ansible_facts['ansible_*']` where `inject_facts_as_vars` is deprecated.
+
+### Shell scripts (general)
+
+- **[Google Shell Style Guide](https://google.github.io/styleguide/shellguide.html)**  
+  Bash only for executables; `.sh` for libraries (non-executable). Send errors to STDERR; use a file header and function comments (API behaviour, globals, arguments, outputs). **Formatting:** 2-space indent, 80-char line length, `$(...)` not backticks, prefer `[[ ... ]]` over `[ ... ]`, quote variables, use arrays for argument lists. **Tooling:** [ShellCheck](https://www.shellcheck.net/) for common bugs. Avoid `eval`; prefer process substitution or `readarray` over piping into `while`; use `(( ))` or `$(( ))` for arithmetic. When scripts grow beyond ~100 lines or non-straightforward control flow, consider rewriting in a structured language.
+
+### Alignment with this doc
+
+- **Ansible:** Our OS-specific vars pattern (`include_vars: "{{ ansible_os_family }}.yml"`) matches the official “Handling OS and distro differences” approach. FQCN and naming/tags/state are already reflected in the playbook conventions above.
+- **Scripts:** Our include guard, `SCRIPT_DIR`/`REPO_ROOT`, and `[[ "$(uname -s)" == "Darwin" ]]` align with Google’s style; adding ShellCheck and explicit error-to-STDERR in new scripts is recommended.
 
 ---
 
